@@ -1,30 +1,92 @@
-const Sequelize = require('sequelize');
-const logger = require('../../utils/winston.logger');
+#!/usr/bin/env node
+/* eslint-disable no-console */
+/* eslint-disable no-use-before-define */
 
-const sequelizeOptions = {
-  logging: (msg) => logger.api.debug(`Database: ${process.env.DB_DATABASE} - ${msg}`),
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  dialect: 'mysql',
-  operatorsAliases: '0',
-  timezone: '-03:00',
-  dialectOptions: {
-    timezone: '-03:00',
-    dateStrings: true,
-    typeCast: true,
-  },
-  pool: {
-    max: 100,
-    min: 0,
-    acquire: 30000,
-    idle: 10000,
-  },
-};
+/**
+ * Module dependencies.
+ */
 
-const sequelize = new Sequelize(
-  process.env.DB_DATABASE,
-  process.env.DB_USERNAME,
-  process.env.DB_PASSWORD,
-  sequelizeOptions,
-);
-module.exports.connection = sequelize;
+const debug = require('debug')('example-node:server');
+const http = require('http');
+const app = require('../app');
+
+/**
+ * Get port from environment and store in Express.
+ */
+
+const port = normalizePort(process.env.PORT || '3000');
+app.set('port', port);
+
+/**
+ * Create HTTP server.
+ */
+
+const server = http.createServer(app);
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+  const portToUse = parseInt(val, 10);
+
+  if (Number.isNaN(portToUse)) {
+    // named pipe
+    return val;
+  }
+
+  if (portToUse >= 0) {
+    // port number
+    return portToUse;
+  }
+
+  return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  const bind = typeof port === 'string'
+    ? `Pipe ${port}`
+    : `Port ${port}`;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(`${bind} requires elevated privileges`);
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(`${bind} is already in use`);
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+  const addr = server.address();
+  const bind = typeof addr === 'string'
+    ? `pipe ${addr}`
+    : `port ${addr.port}`;
+  debug(`Listening on ${bind}`);
+}
